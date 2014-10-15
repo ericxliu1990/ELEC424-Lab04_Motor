@@ -36,16 +36,18 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
-uint16_t CCR1_Val = 333;
-uint16_t CCR2_Val = 249;
-uint16_t CCR3_Val = 166;
-uint16_t CCR4_Val = 83;
+uint16_t CCR1_Val = 665;
+uint16_t CCR2_Val = 0;
+uint16_t CCR3_Val = 0;
+uint16_t CCR4_Val = 0;
 uint16_t PrescalerValue = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
-void TIM_Configuration(TIM_GROUP);
+void TIM_Configuration(TIM_TypeDef * TIM_GROUP, 
+                        uint16_t CCR3_Val, 
+                        uint16_t CCR4_Val);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -70,8 +72,8 @@ int main(void)
   GPIO_Configuration();
 
   /* TIM Configuration */
-  TIM_Configuration(TIM3);
-  TIM_Configuration(TIM4);
+  TIM_Configuration(TIM3, CCR1_Val, CCR2_Val);
+  TIM_Configuration(TIM4, CCR3_Val, CCR4_Val);
 
 
   while (1)
@@ -114,7 +116,9 @@ void GPIO_Configuration(void)
   * @param  None
   * @retval None
   */
-void TIM_Configuration(TIM_GROUP)
+void TIM_Configuration(TIM_TypeDef * TIM_GROUP, 
+                        uint16_t CCR3_Val, 
+                        uint16_t CCR4_Val)
 {
     /* -----------------------------------------------------------------------
     TIM3 Configuration: generate 4 PWM signals with 4 different duty cycles:
@@ -133,7 +137,7 @@ void TIM_Configuration(TIM_GROUP)
     TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 12.5%
   ----------------------------------------------------------------------- */
   /* Compute the prescaler value */
-  PrescalerValue = (uint16_t) (SystemCoreClock / 50000000) - 1;
+  PrescalerValue = (uint16_t) (SystemCoreClock / 24000000) - 1;
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = 665;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
@@ -142,23 +146,8 @@ void TIM_Configuration(TIM_GROUP)
 
   TIM_TimeBaseInit(TIM_GROUP, &TIM_TimeBaseStructure);
 
-  /* PWM1 Mode configuration: Channel1 */
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR1_Val;
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-  TIM_OC1Init(TIM_GROUP, &TIM_OCInitStructure);
-
-  TIM_OC1PreloadConfig(TIM_GROUP, TIM_OCPreload_Enable);
-
-  /* PWM1 Mode configuration: Channel2 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR2_Val;
-
-  TIM_OC2Init(TIM_GROUP, &TIM_OCInitStructure);
-
-  TIM_OC2PreloadConfig(TIM_GROUP, TIM_OCPreload_Enable);
 
   /* PWM1 Mode configuration: Channel3 */
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
@@ -176,6 +165,7 @@ void TIM_Configuration(TIM_GROUP)
 
   TIM_OC4PreloadConfig(TIM_GROUP, TIM_OCPreload_Enable);
 
+  /*TIM enable Group*/
   TIM_ARRPreloadConfig(TIM_GROUP, ENABLE);
 
   /* TIM3 enable counter */
